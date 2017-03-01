@@ -292,6 +292,7 @@ class DSpace(models.Model):
 
         # Set permissions on metadata bitstreams
         self._set_permissions(package)
+
     def _set_permissions(self, package):
         try:
             handle = package.misc_attributes['handle']
@@ -344,21 +345,31 @@ class DSpace(models.Model):
                 LOGGER.warning('Error posting bitstream body', exc_info=True)
                 continue
             LOGGER.debug('Response: %s %s', response.status_code, response.text)
-        
+
         # Add license bundle
+        url = dspace_url + '/RESTapi/handle/' + handle
+        LOGGER.debug('Re-getting item')
+        try:
+            response = requests.get(url, headers=headers, params=params)
+        except Exception:
+            LOGGER.warning('Error getting item for handle %s', handle, exc_info=True)
+
         item = response.json()
+
         url = dspace_url + '/RESTapi/items/' + str(item['id']) + '/bitstreams'
-        with open('dspace-license.txt', mode='r') as f:
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dspace-license.txt'), mode='r') as f:
             data = f.read()
         LOGGER.debug('Posting license bitstream')
         try:
             response = requests.post(url, headers=headers, data=data)
             LOGGER.debug('Response: %s %s', response.status_code, response.text)
-            
+
             # Updating bitream name and bundle name
             bitstream = response.json()
+
             bitstream['name'] = 'license.txt'
             bitstream['bundleName'] = 'LICENSE'
+
             url = dspace_url + '/RESTapi/bitstreams/' + str(bitstream['id'])
             body = bitstream
             LOGGER.debug('Updating license bitstream body %s', body)
@@ -367,10 +378,10 @@ class DSpace(models.Model):
                 LOGGER.debug('Response: %s %s', response.status_code, response.text)
             except Exception:
                 LOGGER.warning('Error updating license bitstream body', exc_info=True)
-                
+
         except Exception:
             LOGGER.warning('Error posting license bitstream', exc_info=True)
-            
+
         # Logout from DSpace API
         url = dspace_url + '/RESTapi/logout'
         try:
