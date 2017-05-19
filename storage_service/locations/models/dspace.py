@@ -365,6 +365,7 @@ class DSpace(models.Model):
         params = {'expand': 'bitstreams'}
         try:
             response = requests.get(url, headers=headers, params=params)
+            item = response.json()
         except Exception:
             LOGGER.warning('Error fetching bitstream information for handle %s', handle, exc_info=True)
         LOGGER.debug('REST API handle mapping %s %s', response.status_code, response)
@@ -395,9 +396,9 @@ class DSpace(models.Model):
             LOGGER.debug('Response: %s %s', response.status_code, response.text)
         
         # Add license bundle
-        item = response.json()
         url = dspace_url + '/RESTapi/items/' + str(item['id']) + '/bitstreams'
-        with open('dspace-license.txt', mode='r') as f:
+        dspace_license_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dspace-license.txt")
+        with open(dspace_license_file, mode='r') as f:
             data = f.read()
         LOGGER.debug('Posting license bitstream')
         try:
