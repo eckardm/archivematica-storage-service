@@ -381,7 +381,7 @@ class DSpace(models.Model):
                 body['policies'] = self.metadata_policy
                 # Add bitstream description for metadata when depositing to DSpace
                 body['description'] = 'Administrative information.'
-            elif bitstream['name'] == ['objects.7z', 'objects.zip']:
+            elif bitstream['name'] in ['objects.7z', 'objects.zip']:
                 # Add bitstream description for objects when depositing to DSpace
                 body['description'] = 'Archival materials.'
             else:
